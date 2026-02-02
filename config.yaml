@@ -1,0 +1,43 @@
+# Sample Configuration for Invoice Extraction Pipeline
+
+# OCR Configuration
+ocr:
+  engine: tesseract  # Options: tesseract, pdf
+  language: eng      # OCR language
+  dpi: 300          # DPI for image processing
+  preprocessing: true  # Enable image preprocessing
+
+# Machine Learning Configuration
+ml:
+  model_type: pattern_based  # Options: pattern_based, spacy_ner
+  confidence_threshold: 0.7
+  spacy_model: en_core_web_sm
+
+# Validation Configuration
+validation:
+  strict_mode: false
+  required_fields:
+    - supplier
+    - total
+    - invoice_date
+  vat_rates:
+    - 0.0
+    - 5.0
+    - 10.0
+    - 20.0
+
+# Anomaly Detection Configuration
+anomaly_detection:
+  enabled: true
+  algorithms:
+    - statistical
+    - rule_based
+  threshold: 0.8
+
+# Export Configuration
+export:
+  formats:
+    - json
+    - csv
+  output_dir: output
+  pretty_json: true
