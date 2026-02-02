@@ -52,6 +52,7 @@ class TesseractOCR(OCREngine):
         self.language = language
         self.dpi = dpi
         self.preprocessing = preprocessing
+        self._libraries_loaded = False
         
         try:
             import pytesseract
@@ -62,9 +63,10 @@ class TesseractOCR(OCREngine):
             self.Image = Image
             self.cv2 = cv2
             self.np = np
+            self._libraries_loaded = True
         except ImportError as e:
-            logger.error(f"Failed to import required libraries: {e}")
-            raise
+            logger.warning(f"OCR libraries not installed: {e}. Install with: pip install pytesseract Pillow opencv-python")
+            # Don't raise - allow graceful degradation
     
     def preprocess_image(self, image_path: str) -> Any:
         """
@@ -76,6 +78,9 @@ class TesseractOCR(OCREngine):
         Returns:
             Preprocessed image
         """
+        if not self._libraries_loaded:
+            raise RuntimeError("OCR libraries not installed. Install with: pip install pytesseract Pillow opencv-python")
+        
         if not self.preprocessing:
             return self.Image.open(image_path)
         
@@ -103,6 +108,15 @@ class TesseractOCR(OCREngine):
         Returns:
             Dictionary containing extracted text and metadata
         """
+        if not self._libraries_loaded:
+            return {
+                'text': '',
+                'raw_data': {},
+                'success': False,
+                'error': 'OCR libraries not installed. Install with: pip install pytesseract Pillow opencv-python',
+                'engine': 'tesseract'
+            }
+        
         try:
             # Preprocess image
             image = self.preprocess_image(image_path)
