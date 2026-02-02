@@ -7,6 +7,10 @@ from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
+# Validation constants
+CALCULATION_TOLERANCE = 0.01  # Tolerance for rounding errors in currency calculations
+VAT_RATE_TOLERANCE = 0.5  # Tolerance for VAT rate validation (percentage points)
+
 
 class Validator(ABC):
     """Abstract base class for validators."""
@@ -87,7 +91,7 @@ class InvoiceValidator(Validator):
                 total = float(data['total'])
                 
                 expected_total = subtotal + vat
-                if abs(expected_total - total) > 0.01:  # Allow small rounding errors
+                if abs(expected_total - total) > CALCULATION_TOLERANCE:  # Allow small rounding errors
                     errors.append(
                         f"Total mismatch: subtotal ({subtotal}) + VAT ({vat}) = {expected_total}, "
                         f"but total is {total}"
@@ -120,7 +124,7 @@ class InvoiceValidator(Validator):
                     # Check if VAT rate is close to any expected rate
                     valid = False
                     for expected_rate in self.vat_rates:
-                        if abs(vat_rate - expected_rate) < 0.5:  # Allow 0.5% tolerance
+                        if abs(vat_rate - expected_rate) < VAT_RATE_TOLERANCE:  # Allow tolerance
                             valid = True
                             break
                     
@@ -205,7 +209,7 @@ class InvoiceValidator(Validator):
                 if all(k in item for k in ['quantity', 'unit_price', 'total']):
                     try:
                         expected = item['quantity'] * item['unit_price']
-                        if abs(expected - item['total']) > 0.01:
+                        if abs(expected - item['total']) > CALCULATION_TOLERANCE:
                             errors.append(
                                 f"Line item {i+1}: total mismatch "
                                 f"({item['quantity']} × {item['unit_price']} = {expected}, "

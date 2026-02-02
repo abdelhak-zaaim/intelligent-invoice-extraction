@@ -109,11 +109,13 @@ class TesseractOCR(OCREngine):
             Dictionary containing extracted text and metadata
         """
         if not self._libraries_loaded:
+            error_msg = 'OCR libraries not installed. Install with: pip install pytesseract Pillow opencv-python'
+            logger.error(error_msg)
             return {
                 'text': '',
                 'raw_data': {},
                 'success': False,
-                'error': 'OCR libraries not installed. Install with: pip install pytesseract Pillow opencv-python',
+                'error': error_msg,
                 'engine': 'tesseract'
             }
         
@@ -180,27 +182,32 @@ class PDFOCREngine(OCREngine):
             Dictionary containing extracted text and metadata
         """
         try:
+            import tempfile
+            import os
+            
             # Convert PDF to images
             images = self.convert_from_path(pdf_path, dpi=self.dpi)
             
             all_text = []
             all_data = []
             
-            # Process each page
-            for i, image in enumerate(images):
-                # Save temporary image
-                temp_path = f"/tmp/page_{i}.png"
-                image.save(temp_path, 'PNG')
-                
-                # Extract text from image
-                result = self.ocr_engine.extract_text(temp_path)
-                
-                if result['success']:
-                    all_text.append(f"--- Page {i+1} ---\n{result['text']}")
-                    all_data.append({
-                        'page': i + 1,
-                        'data': result['raw_data']
-                    })
+            # Create temporary directory for page images
+            with tempfile.TemporaryDirectory() as temp_dir:
+                # Process each page
+                for i, image in enumerate(images):
+                    # Save temporary image
+                    temp_path = os.path.join(temp_dir, f"page_{i}.png")
+                    image.save(temp_path, 'PNG')
+                    
+                    # Extract text from image
+                    result = self.ocr_engine.extract_text(temp_path)
+                    
+                    if result['success']:
+                        all_text.append(f"--- Page {i+1} ---\n{result['text']}")
+                        all_data.append({
+                            'page': i + 1,
+                            'data': result['raw_data']
+                        })
             
             return {
                 'text': '\n\n'.join(all_text),

@@ -8,6 +8,9 @@ from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
+# Extraction constants
+DEFAULT_CONFIDENCE_SCORE = 0.8  # Default confidence for pattern-based extraction
+
 
 class FieldExtractor(ABC):
     """Abstract base class for field extraction."""
@@ -145,7 +148,7 @@ class PatternBasedExtractor(FieldExtractor):
                 value = self._extract_with_pattern(text, patterns)
                 if value:
                     extracted[field] = value
-                    extracted['confidence_scores'][field] = 0.8  # Basic confidence
+                    extracted['confidence_scores'][field] = DEFAULT_CONFIDENCE_SCORE
             
             # Extract line items
             extracted['line_items'] = self._extract_line_items(text)
